@@ -108,16 +108,16 @@ namespace cg::renderer
 			vertices[2] = vertex_buffer->item(index_buffer->item(vertex_id++));
 
 			for (auto& vertex : vertices) {
-				float4 coords{vertex.v.x, vertex.v.y, vertex.v.z, 1.f};
+				float4 coords{vertex.x, vertex.y, vertex.z, 1.f};
 
 				auto processed_vertex = vertex_shader(coords, vertex);
 
-				vertex.v.x = processed_vertex.first.x / processed_vertex.first.w;
-				vertex.v.y = processed_vertex.first.y / processed_vertex.first.w;
-				vertex.v.z = processed_vertex.first.z / processed_vertex.first.w;
+				vertex.x = processed_vertex.first.x / processed_vertex.first.w;
+				vertex.y = processed_vertex.first.y / processed_vertex.first.w;
+				vertex.z = processed_vertex.first.z / processed_vertex.first.w;
 
-				vertex.v.x = (vertex.v.x + 1.f) * width / 2.f;
-				vertex.v.y = (-vertex.v.y + 1.f) * height / 2.f;
+				vertex.x = (vertex.x + 1.f) * width / 2.f;
+				vertex.y = (-vertex.y + 1.f) * height / 2.f;
 			}
 		}
 		// TODO Lab: 1.05 Add `Rasterization` and `Pixel shader` stages to `draw` method of `cg::renderer::rasterizer`

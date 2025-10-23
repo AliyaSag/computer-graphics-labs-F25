@@ -6,9 +6,6 @@
 
 void cg::renderer::rasterization_renderer::init()
 {
-
-	renderer::load_model();
-	renderer::load_camera();
 	
 	rasterizer = std::make_shared<cg::renderer::rasterizer<cg::vertex, cg::unsigned_color>>();
 	rasterizer->set_viewport(settings->width, settings->height);

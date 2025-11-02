@@ -50,12 +50,60 @@ void cg::renderer::ray_tracing_renderer::render()
 		payload.color = {0.0f, 0.0f, 0.0f};
 		return payload;
 	};
-	// TODO Lab: 2.02 Add `closest_hit_shader` to `raytracer` class to return diffuse color
-	// TODO Lab: 2.03 Adjust `closest_hit_shader` of `raytracer` to implement Lambertian shading model
-	// TODO Lab: 2.04 Define `any_hit_shader` and `miss_shader` for `shadow_raytracer`
-	// TODO Lab: 2.04 Adjust `closest_hit_shader` of `raytracer` to cast shadows rays and to ignore occluded lights
-	// TODO Lab: 2.05 Adjust `ray_tracing_renderer` class to build the acceleration structure
-	// TODO Lab: 2.06 (Bonus) Adjust `closest_hit_shader` for Monte-Carlo light tracing
+	std::random_device random_device;
+	std::mt19937 random_generator(random_device());
+	std::uniform_real_distribution<float> uniform_dist(-1.0f, 1.0f);
+	raytracer->closest_hit_shader = [&](
+		const ray& ray,
+		payload& payload,
+		const triangle<cg::vertex>& triangle,
+		size_t depth
+	){
+		float3 position = ray.position + ray.direction * payload.t;
+
+		float3 normal = normalize(
+			payload.bary.x * triangle.na +
+			payload.bary.y * triangle.nb +
+			payload.bary.z * triangle.nc
+		);
+
+		float3 result_color = triangle.emissive;
+
+		float3 random_direction{
+			uniform_dist(random_generator),
+			uniform_dist(random_generator),
+			uniform_dist(random_generator)
+		};
+
+		if(dot(normal,random_direction) < 0.0f) {
+			random_direction = -random_direction;
+		}
+
+		cg::renderer::ray to_next_object(position, random_direction);
+
+		auto payload_next = raytracer->trace_ray(to_next_object, depth);
+
+		result_color += triangle.diffuse * payload_next.color.to_float3() *
+										   std::max(dot(normal, to_next_object.direction), 0.0f);
+
+		payload.color = cg::color::from_float3(result_color);
+		return payload;
+	};
+
+	shadow_raytracer->miss_shader = [](const ray& ray) {
+		payload payload{};
+		payload.t = -1.0f;
+		return payload;
+	};
+	shadow_raytracer->any_hit_shader = [](
+		const ray& ray,
+		payload& payload,
+		const triangle<cg::vertex>& triangle
+		) {
+		return payload;
+	};
+	shadow_raytracer->build_acceleration_structure();
+
 	auto start = std::chrono::high_resolution_clock::now();
 
 	raytracer->ray_generation(

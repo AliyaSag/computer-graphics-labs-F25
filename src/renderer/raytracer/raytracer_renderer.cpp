@@ -32,7 +32,11 @@ void cg::renderer::ray_tracing_renderer::init()
 	camera->set_angle_of_view(settings->camera_angle_of_view);
 	camera->set_z_near(settings->camera_z_near);
 	camera->set_z_far(settings->camera_z_far);
-	// TODO Lab: 2.03 Add light information to `lights` array of `ray_tracing_renderer`
+	lights.push_back({float3 {0.0f, 1.58f, -0.03f}, float3 {0.78f, 0.78f, 0.78f}});
+	lights.push_back({float3{-0.24f, 1.97f, 0.16f}, float3{0.78f, 0.78f, 0.78f} / 4.0f});
+	lights.push_back({float3{-0.24f, 1.97f, -0.22f}, float3{0.78f, 0.78f, 0.78f} / 4.0f});
+	lights.push_back({float3{0.23f, 1.97f, -0.22f}, float3{0.78f, 0.78f, 0.78f} / 4.0f});
+	lights.push_back({float3{0.23f, 1.97f, 0.16f}, float3{0.78f, 0.78f, 0.78f} / 4.0f});
 	// TODO Lab: 2.04 Initialize `shadow_raytracer` in `ray_tracing_renderer`
 }
 

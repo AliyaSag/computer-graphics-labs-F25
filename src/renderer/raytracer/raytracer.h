@@ -122,14 +122,15 @@ namespace cg::renderer
 	inline void raytracer<VB, RT>::set_render_target(
 			std::shared_ptr<resource<RT>> in_render_target)
 	{
-		// TODO Lab: 2.01 Implement `set_render_target`, `set_viewport`, and `clear_render_target` methods of `raytracer` class
+		render_target = in_render_target;
 	}
 
 	template<typename VB, typename RT>
 	inline void raytracer<VB, RT>::set_viewport(size_t in_width,
 												size_t in_height)
 	{
-		// TODO Lab: 2.01 Implement `set_render_target`, `set_viewport`, and `clear_render_target` methods of `raytracer` class
+		width = in_width;
+		height = in_height;
 		// TODO Lab: 2.06 Add `history` resource in `raytracer` class
 	}
 
@@ -137,7 +138,9 @@ namespace cg::renderer
 	inline void raytracer<VB, RT>::clear_render_target(
 			const RT& in_clear_value)
 	{
-		// TODO Lab: 2.01 Implement `set_render_target`, `set_viewport`, and `clear_render_target` methods of `raytracer` class
+		for (size_t i = 0; i < render_target->count(); i++) {
+			render_target->item(i) = in_clear_value;
+		}
 		// TODO Lab: 2.06 Add `history` resource in `raytracer` class
 	}
 
@@ -165,19 +168,49 @@ namespace cg::renderer
 			float3 position, float3 direction,
 			float3 right, float3 up, size_t depth, size_t accumulation_num)
 	{
-		// TODO Lab: 2.01 Implement `ray_generation` and `trace_ray` method of `raytracer` class
-		// TODO Lab: 2.06 Implement TAA in `ray_generation` method of `raytracer` class
+		float frame_weight = 1.0f / static_cast<float>(accumulation_num);
+
+		for (int frame_id = 0; frame_id < accumulation_num;  frame_id++) {
+			std::cout << "Tracing frame #" << frame_id + 1 << "\n";
+			float2 jitter = get_jitter(frame_id);
+
+			for (int x = 0; x < width; x++) {
+				for (int y = 0; y < height; y++) {
+					float u = (2.0f * x + jitter.x) / static_cast<float>(width - 1) - 1.0f;
+					float v = (2.0f * y + jitter.y) / static_cast<float>(height - 1) - 1.0f;
+
+					u *= static_cast<float>(width) / static_cast<float>(height);
+
+					float3 ray_direction = direction + u * right - v * up;
+					ray ray(position, ray_direction);
+
+					payload payload = trace_ray(ray, depth);
+
+					auto& history_pixel = history->item(x, y);
+					history_pixel += sqrt(
+						float3{payload.color.r, payload.color.g, payload.color.b} * frame_weight
+					);
+
+					if (frame_id == accumulation_num - 1) {
+						render_target->item(x, y) = RT::from_float3(history_pixel);
+					}
+				}
+			}
+		}
 	}
 
 	template<typename VB, typename RT>
 	inline payload raytracer<VB, RT>::trace_ray(
 			const ray& ray, size_t depth, float max_t, float min_t) const
 	{
-		// TODO Lab: 2.01 Implement `ray_generation` and `trace_ray` method of `raytracer` class
+		if (depth == 0) {
+			return miss_shader(ray);
+		}
+		depth--;
 		// TODO Lab: 2.02 Adjust `trace_ray` method of `raytracer` class to traverse geometry and call a closest hit shader
 		// TODO Lab: 2.04 Adjust `trace_ray` method of `raytracer` to use `any_hit_shader`
 		// TODO Lab: 2.05 Adjust `trace_ray` method of `raytracer` class to traverse the acceleration structure
-		return payload{};
+		return miss_shader(ray);
 	}
 
 	template<typename VB, typename RT>

@@ -276,10 +276,38 @@ Microsoft::WRL::ComPtr<ID3DBlob> cg::renderer::dx12_renderer::compile_shader(con
     return shader;
 }
 
-void cg::renderer::dx12_renderer::create_pso()
-{
-	// TODO Lab: 3.05 Compile shaders
-	// TODO Lab: 3.05 Setup a PSO descriptor and create a PSO
+void cg::renderer::dx12_renderer::create_pso() {
+    ComPtr<ID3DBlob> vertex_shader = compile_shader("VSMain", "vs_5_0");
+    ComPtr<ID3DBlob> pixel_shader = compile_shader("PSMain", "ps_5_0");
+
+    D3D12_INPUT_ELEMENT_DESC input_descs[] = {
+        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+        {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+        {"TEXTCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+        {"COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+        {"COLOR", 1, DXGI_FORMAT_R32G32B32_FLOAT, 0, 44, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+        {"COLOR", 2, DXGI_FORMAT_R32G32B32_FLOAT, 0, 56, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+    };
+    const std::size_t count_descs = std::size(input_descs);
+
+    D3D12_GRAPHICS_PIPELINE_STATE_DESC desc{};
+    desc.InputLayout = {input_descs, count_descs};
+    desc.pRootSignature = root_signature.Get();
+    desc.VS = CD3DX12_SHADER_BYTECODE(vertex_shader.Get());
+    desc.PS = CD3DX12_SHADER_BYTECODE(pixel_shader.Get());
+    desc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+    desc.RasterizerState.FrontCounterClockwise = true;
+    desc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+    desc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+    desc.DepthStencilState.DepthEnable = false;
+    desc.DepthStencilState.StencilEnable = false;
+    desc.SampleMask = std::numeric_limits<UINT>::max();
+    desc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+    desc.NumRenderTargets = 1;
+    desc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+    desc.SampleDesc.Count = 1;
+
+    THROW_IF_FAILED(device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&pipeline_state)));
 }
 
 void cg::renderer::dx12_renderer::create_resource_on_upload_heap(ComPtr<ID3D12Resource>& resource, UINT size, const std::wstring& name)

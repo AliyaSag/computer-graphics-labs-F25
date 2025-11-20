@@ -419,7 +419,6 @@ void cg::renderer::dx12_renderer::populate_command_list()
 	THROW_IF_FAILED(command_allocators[frame_index]->Reset());
 	THROW_IF_FAILED(command_list->Reset(command_allocators[frame_index].Get(), pipeline_state.Get()));
 
-	// Initial state
 	command_list->SetGraphicsRootSignature(root_signature.Get());
 	ID3D12DescriptorHeap* heaps[] = {cbv_srv_heap.get()};
 	command_list->SetDescriptorHeaps(_countof(heaps), heaps);
@@ -438,7 +437,6 @@ void cg::renderer::dx12_renderer::populate_command_list()
 
 	command_list->ResourceBarrier(_countof(begin_barriers), begin_barriers);
 
-	// Drawing
 	command_list->OMSetRenderTargets(1, &rtv_heap.get_cpu_descriptor_handle(frame_index), FALSE, nullptr);
 	const float clear_color[] = {0.0f, 0.0f, 0.0f, 1.0f};
 	command_list->ClearRenderTargetView(rtv_heap.get_cpu_descriptor_handle(frame_index), clear_color, 0, nullptr);

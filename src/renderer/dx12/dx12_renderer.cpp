@@ -8,7 +8,6 @@
 
 #include <filesystem>
 
-
 void cg::renderer::dx12_renderer::init()
 {
 	model = std:: make_shared<cg::world::model>();

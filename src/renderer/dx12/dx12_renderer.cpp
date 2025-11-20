@@ -245,8 +245,10 @@ void cg::renderer::dx12_renderer::create_root_signature(const D3D12_STATIC_SAMPL
 	));
 }
 
-std::filesystem::path cg::renderer::dx12_renderer::get_shader_path() {
-    return settings->shader_path;
+std::filesystem::path cg::renderer::dx12_renderer::get_shader_path()
+{
+// TODO Lab: 3.05 Compile shaders
+	return "";
 }
 
 ComPtr<ID3DBlob> cg::renderer::dx12_renderer::compile_shader(const std::string& entrypoint, const std::string& target)

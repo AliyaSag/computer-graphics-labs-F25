@@ -369,12 +369,17 @@ void cg::renderer::dx12_renderer::create_constant_buffer_view(const ComPtr<ID3D1
 
 void cg::renderer::dx12_renderer::load_assets()
 {
-	// TODO Lab: 3.05 Create a descriptor table and a root signature
-	// TODO Lab: 3.05 Setup a PSO descriptor and create a PSO
-	// TODO Lab: 3.06 Create command allocators and a command list
+	create_root_signature(nullptr, 0);
+    create_pso();
 
 	create_command_allocators();
 	create_command_list();
+
+	cbv_srv_heap.create_heap(
+        device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
+
+    const std::size_t shape_num = model->get_index_buffers().size();
+    assert(model->get_vertex_buffers().size() == shape_num);
 
 	vertex_buffers.resize(model->get_vertex_buffers().size());
 	vertex_buffer_views.resize(model->get_vertex_buffers().size());
@@ -400,31 +405,22 @@ void cg::renderer::dx12_renderer::load_assets()
 		copy_data(index_buffer_data->get_data(), index_buffer_size, index_buffers[i]);
 		index_buffer_views[i] = create_index_buffer_view(index_buffers[i], index_buffer_size);
 	}
-	std::wstring constant_buffer_name(L"Constant buffer ");
-	create_resource_on_upload_heap(constant_buffer, 64 * 1024, constant_buffer_name);
-	copy_data(&cb, sizeof(cb), constant_buffer);
-	CD3DX12_RANGE read_range(0,0);
-	THROW_IF_FAILED(constant_buffer->Map(0,&read_range,
-		reinterpret_cast<void **>(&constant_buffer_data_begin)
-	));
+	create_resource_on_upload_heap(constant_buffer, 64*1024, L"Constant buffer");
+    copy_data(&cb, sizeof(cb), constant_buffer);
+    CD3DX12_RANGE read_range{0, 0};
+    THROW_IF_FAILED(constant_buffer->Map(0, &read_range, reinterpret_cast<void**>(&constant_buffer_data_begin)));
 
-	cbv_srv_heap.create_heap(
-		device,
-		D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
-		1,
-		D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE
-	);
-	create_constant_buffer_view(constant_buffer, cbv_srv_heap.get_cpu_descriptor_handle(0));
-	THROW_IF_FAILED(command_list->Close());
+    create_constant_buffer_view(constant_buffer, cbv_srv_heap.get_cpu_descriptor_handle());
 
-	THROW_IF_FAILED(device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence)));
-	fence_event = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+    THROW_IF_FAILED(command_list->Close());
 
-	if(fence_event == nullptr)
-	{
-		THROW_IF_FAILED(HRESULT_FROM_WIN32(GetLastError()));
-	}
-	wait_for_gpu();
+    THROW_IF_FAILED(device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence)));
+    fence_event = CreateEvent(nullptr, false, false, nullptr);
+    if (fence_event == nullptr) {
+        THROW_IF_FAILED(HRESULT_FROM_WIN32(GetLastError()));
+    }
+
+    wait_for_gpu();
 }
 
 

@@ -255,18 +255,9 @@ Microsoft::WRL::ComPtr<ID3DBlob> cg::renderer::dx12_renderer::compile_shader(con
     ComPtr<ID3DBlob> shader, error;
     UINT compile_flags = 0;
 #ifdef DEBUG
-    compile_flags |= D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
-#endif // !DEBUG
+#endif 
 
-    HRESULT res = D3DCompileFromFile(get_shader_path().wstring().c_str(),
-                                     nullptr,
-                                     nullptr,
-                                     entrypoint.c_str(),
-                                     target.c_str(),
-                                     compile_flags,
-                                     0,
-                                     &shader,
-                                     &error);
+    HRESULT res = D3DCompileFromFile(get_shader_path().wstring().c_str(), nullptr, nullptr, entrypoint.c_str(), target.c_str(), compile_flags, 0, &shader, &error);
     if (FAILED(res)) {
         OutputDebugStringA((char*)error->GetBufferPointer());
         THROW_IF_FAILED(res);

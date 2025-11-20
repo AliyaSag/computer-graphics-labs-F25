@@ -251,33 +251,29 @@ std::filesystem::path cg::renderer::dx12_renderer::get_shader_path()
 	return "";
 }
 
-ComPtr<ID3DBlob> cg::renderer::dx12_renderer::compile_shader(const std::string& entrypoint, const std::string& target)
-{
-	ComPtr<ID3DBlob> shader, error;
-	UINT compile_flags = 0;
+Microsoft::WRL::ComPtr<ID3DBlob> cg::renderer::dx12_renderer::compile_shader(const std::string& entrypoint,
+                                                                             const std::string& target) {
+    ComPtr<ID3DBlob> shader, error;
+    UINT compile_flags = 0;
+#ifdef DEBUG
+    compile_flags |= D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+#endif // !DEBUG
 
-	#ifdef _DEBUG
-	compile_flags |= D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
-	#endif
+    HRESULT res = D3DCompileFromFile(get_shader_path().wstring().c_str(),
+                                     nullptr,
+                                     nullptr,
+                                     entrypoint.c_str(),
+                                     target.c_str(),
+                                     compile_flags,
+                                     0,
+                                     &shader,
+                                     &error);
+    if (FAILED(res)) {
+        OutputDebugStringA((char*)error->GetBufferPointer());
+        THROW_IF_FAILED(res);
+    }
 
-	HRESULT res = D3DCompileFromFile(
-		shader_path.wstring().c_str(),
-		nullptr,nullptr,
-		entrypoint.c_str(),
-		target.c_str(),
-		compile_flags,
-		0,
-		&shader,
-		&error
-	);
-
-	if (FAILED (res))
-	{
-		OutputDebugStringA((char*)error->GetBufferPointer());
-		THROW_IF_FAILED(res);
-	}
-
-	return shader;
+    return shader;
 }
 
 void cg::renderer::dx12_renderer::create_pso()

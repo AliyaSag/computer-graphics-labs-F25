@@ -253,8 +253,31 @@ std::filesystem::path cg::renderer::dx12_renderer::get_shader_path()
 
 ComPtr<ID3DBlob> cg::renderer::dx12_renderer::compile_shader(const std::string& entrypoint, const std::string& target)
 {
-	// TODO Lab: 3.05 Compile shaders
-	return nullptr;
+	ComPtr<ID3DBlob> shader, error;
+	UINT compile_flags = 0;
+
+	#ifdef _DEBUG
+	compile_flags |= D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+	#endif
+
+	HRESULT res = D3DCompileFromFile(
+		shader_path.wstring().c_str(),
+		nullptr,nullptr,
+		entrypoint.c_str(),
+		target.c_str(),
+		compile_flags,
+		0,
+		&shader,
+		&error
+	);
+
+	if (FAILED (res))
+	{
+		OutputDebugStringA((char*)error->GetBufferPointer());
+		THROW_IF_FAILED(res);
+	}
+
+	return shader;
 }
 
 void cg::renderer::dx12_renderer::create_pso()

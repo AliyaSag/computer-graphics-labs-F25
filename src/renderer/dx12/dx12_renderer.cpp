@@ -245,12 +245,8 @@ void cg::renderer::dx12_renderer::create_root_signature(const D3D12_STATIC_SAMPL
 	));
 }
 
-std::filesystem::path cg::renderer::dx12_renderer::get_shader_path(const std::string& shader_name)
-{
-	WCHAR buffer[MAX_PATH];
-	GetModuleFileName(nullptr, buffer, MAX_PATH);
-	auto shader_path = std::filesystem::path(buffer).parent_path() / shader_name;
-	return shader_path;
+std::filesystem::path cg::renderer::dx12_renderer::get_shader_path() {
+    return settings->shader_path;
 }
 
 ComPtr<ID3DBlob> cg::renderer::dx12_renderer::compile_shader(const std::string& entrypoint, const std::string& target)
